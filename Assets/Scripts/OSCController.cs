@@ -51,14 +51,14 @@ public class OSCController : MonoBehaviour
             //Debug.Log(X);
 
             float a, b, c, d, e, f, g, h;
-            a = -6.86352503f;
-            b = -1.21414921f;
-            c = 4.51845528f;
-            d = -1.04581888f;
-            e = 6.67558331f;
-            f = -3.83324647f;
-            g = 0.01714518f;
-            h = -0.02539929f;
+            a = -7.09321087f;
+            b = -1.22964594f;
+            c = 9.10761932f;
+            d = -1.19379422f;
+            e = 6.96728368f;
+            f = -4.22980069f;
+            g = -0.00586784749f;
+            h = 0.00566685508f;
 
             float HomoX = a * X + b * Z + c;
             float HomoZ = d * X + e * Z + f;

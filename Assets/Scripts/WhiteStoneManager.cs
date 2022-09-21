@@ -18,7 +18,7 @@ public class WhiteStoneManager : MonoBehaviour
     {
         gamecontroller = GameObject.Find("GameController").GetComponent<GameController>();
         //2?b?????I?u?W?F?N?g??????
-        Invoke("Destroy", 8);
+        Invoke("Destroy", 12);
     }
 
     // Update is called once per frame
@@ -49,13 +49,16 @@ public class WhiteStoneManager : MonoBehaviour
 
                 lineList.Add(beam);
 
-                if (collision.GetComponent<WhiteStoneManager>().touchBlackFlag)
+                if (collision.GetComponent<WhiteStoneManager>() != null)
                 {
-                    // ???_????????
-                    //line.positionCount = PointList.Count;
-                    line.positionCount = 2;
-                    line.SetPosition(0, this.transform.position);
-                    line.SetPosition(1, collision.transform.position);
+                    if (collision.GetComponent<WhiteStoneManager>().touchBlackFlag)
+                    {
+                        // ???_????????
+                        //line.positionCount = PointList.Count;
+                        line.positionCount = 2;
+                        line.SetPosition(0, this.transform.position);
+                        line.SetPosition(1, collision.transform.position);
+                    }
                 }
             }
         }

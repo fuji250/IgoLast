@@ -27,7 +27,6 @@ namespace TagHop.Editor
 
         private static readonly object falseObject = false; // Only box once. This is a matter of principle.
         private static object displayNumber = 0;
-        private static object displayNumber1 = 1;
         private static EditorWindow _instance;
 
         private static readonly bool fullscreen = false;
@@ -44,12 +43,6 @@ namespace TagHop.Editor
         public static void Toggle()
         {
             ToggleFullScreen(PlayModeStateChange.EnteredPlayMode);
-        }
-
-        [MenuItem("Window/General/Game (Fullscreen2) %#&3", priority = 3)]
-        public static void Toggle2()
-        {
-            ToggleFullScreen2(PlayModeStateChange.EnteredPlayMode);
         }
 
         public static void ToggleFullScreen(PlayModeStateChange playModeStateChange)
@@ -85,47 +78,6 @@ namespace TagHop.Editor
 
             showToolbarProperty?.SetValue(_instance, falseObject);
             displayProperty?.SetValue(_instance, displayNumber);
-
-            var desktopResolution = new Vector2(Screen.currentResolution.width, Screen.currentResolution.height);
-            var fullscreenRect = new Rect(Vector2.zero, desktopResolution);
-            _instance.ShowPopup();
-            _instance.position = fullscreenRect;
-            _instance.Focus();
-        }
-
-        public static void ToggleFullScreen2(PlayModeStateChange playModeStateChange)
-        {
-            if (playModeStateChange == PlayModeStateChange.EnteredEditMode || playModeStateChange == PlayModeStateChange.ExitingEditMode)
-            {
-                CloseGameWindow();
-                return;
-            }
-
-            if (gameViewType == null)
-            {
-                Debug.LogError("GameView type not found.");
-                return;
-            }
-
-            if (showToolbarProperty == null)
-            {
-                Debug.LogWarning("GameView.showToolbar property not found.");
-            }
-
-            switch (playModeStateChange)
-            {
-                case PlayModeStateChange.ExitingPlayMode:
-                    return;
-                case PlayModeStateChange.EnteredPlayMode: //Used to toggle
-                    if (CloseGameWindow())
-                        return;
-                    break;
-            }
-
-            _instance = (EditorWindow)ScriptableObject.CreateInstance(gameViewType);
-
-            showToolbarProperty?.SetValue(_instance, falseObject);
-            displayProperty?.SetValue(_instance, displayNumber1);
 
             var desktopResolution = new Vector2(Screen.currentResolution.width, Screen.currentResolution.height);
             var fullscreenRect = new Rect(Vector2.zero, desktopResolution);

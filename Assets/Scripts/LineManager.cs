@@ -15,64 +15,58 @@ public class LineManager : MonoBehaviour
     Rigidbody rb;
 
     [SerializeField] private Vector2 localGravity;
-    private Rigidbody2D rBody;
+    private Rigidbody rBody;
 
     private bool FalledFlag = false;
 
     public float accelerationScale; // 加速度の大きさ
 
+    public GameObject whiteStone;
+
+    public int StoneCount = 0;
+
+    //点座標X
+    public int X;
+    //点座標Y
+    public int Z;
+
     // Use this for initialization
     void Start () {
 		prevMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         rb = gameObject.GetComponent<Rigidbody>();
-        rBody = gameObject.GetComponent<Rigidbody2D>();
+        rBody = gameObject.GetComponent<Rigidbody>();
         MakeList();
 
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
         //rBody.AddForce(new Vector2(0,10), ForceMode2D.Force);
     }
 
-    /*
-
-	// Update is called once per frame
-	void Update () {
-		Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-		if ( Input.GetMouseButton(0) ) {
-			// ?}?E?X???????????????x?^????
-			rb.velocity = (mousePos - prevMousePos) / Time.deltaTime;
-		}
-
-		prevMousePos = mousePos;
-	}
-
-    // ????
-    void OnMouseDown()
-    {
-        rb.useGravity = false;
-        this.screenPoint = Camera.main.WorldToScreenPoint(transform.position);
-        this.offset = transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z));
-    }
-    // ????
-    void OnMouseDrag()
-    {
-        Vector3 currentScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
-        Vector3 currentPosition = Camera.main.ScreenToWorldPoint(currentScreenPoint) + this.offset;
-        transform.position = currentPosition;
-    }
-    */
-
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter(Collider collision)
     {
         //WallLayer??
-        if (collision.gameObject.layer == 13)
+        if (collision.gameObject.layer == 2)
         {
             FalledFlag = true;
-            rBody = this.GetComponent<Rigidbody2D>();
-            Debug.Log("???");
-            rBody.simulated = false; //??????rigidBody???d?????g??????????
+            rBody = this.GetComponent<Rigidbody>();
+            rBody.useGravity = false; //??????rigidBody???d?????g??????????
             rBody.velocity = Vector2.zero;
-            rBody.GetComponent<PolygonCollider2D>().isTrigger = false;
+            rBody.GetComponent<BoxCollider>().isTrigger = false;
+            Debug.Log("!!!!!");
+            LineRenderer lineRenderer = this.GetComponent<LineRenderer>();
+            for (var i = 0; i < lineRenderer.positionCount; i++)
+            {
+                X += (int)lineRenderer.GetPosition(i).x;
+                Z += (int)lineRenderer.GetPosition(i).z;
+            }
+            for (int i = 0; i < StoneCount; i++)
+            {
+                //Instantiate(whiteStone, this.gameObject.transform.position + new Vector3(5, 0, 5), Quaternion.identity);
+                Instantiate(whiteStone, new Vector3(X/ lineRenderer.positionCount + this.transform.position.x, this.transform.position.y, Z/ lineRenderer.positionCount + this.transform.position.z), Quaternion.identity);
+                Debug.Log("AAA");
+
+            }
+            Destroy(this.gameObject);
+
         }
     }
 
@@ -81,21 +75,20 @@ public class LineManager : MonoBehaviour
         if (FalledFlag)
         {
             SetLocalGravity(); //?d????AddForce???????????\?b?h???????BFixedUpdate???D???????B
-            Debug.Log("!!!!!");
         }
         else
         {
             //rBody.AddForce(localGravity, ForceMode2D.Force);
-            rBody.simulated = true;
-            rBody.AddForce(new Vector2(0, 15), ForceMode2D.Force);
+            rBody.useGravity = true;
+            rBody.AddForce(new Vector2(0, 15), ForceMode.Force);
             transform.position = Vector3.MoveTowards(transform.position, cam.transform.position　- new Vector3(5,0,5), 0.1f);
-            Debug.Log("SSS");
+            
         }
     }
 
     private void SetLocalGravity()
     {
-        rBody.AddForce(localGravity, ForceMode2D.Force);
+        rBody.AddForce(localGravity, ForceMode.Force);
     }
 
     public void MakeList()

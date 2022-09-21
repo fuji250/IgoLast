@@ -29,6 +29,7 @@ public class GameController : MonoBehaviour
     public GameObject whiteStone;
     public GameObject OutWhiteStone;
     public GameObject blackStone;
+    public GameObject emptyBox;
 
     public COLOR player = COLOR.WHITE;
 
@@ -44,6 +45,8 @@ public class GameController : MonoBehaviour
     int BlackNum = 1;
     int rndint = 1;
 
+    int StoneCount = 0;
+
 
     // Start is called before the first frame update
     void Start()
@@ -54,24 +57,20 @@ public class GameController : MonoBehaviour
         //配列を初期化
         InitializeArray();
 
-        PutBlack(2, 1);
-        PutBlack(2, 3);
-        PutBlack(1, 2);
-        PutBlack(3, 2);
-        PutBlack(6, 6);
-        PutBlack(6, 7);
-        //PutBlack(7, 6);
-        //PutBlack(7, 7);
-        PutBlack(3, 7);
-
+        /*PutBlack(9,9);
+        PutBlack(8,8);
+        PutBlack(7,9);
+        PutBlack(7,8);
+        PutBlack(9,7);
+        PutBlack(8,7);*/
         audioSource = GameObject.Find("Audio").GetComponent<AudioSource>();
-        InvokeRepeating("MakeBlack", 1, 0.3f);
+        InvokeRepeating("MakeBlack", 1, 0.7f);
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        //ResetBoard();
         if (Input.GetMouseButtonDown(1))
         {
             //マウスのポジションを取得してRayに代入
@@ -95,17 +94,21 @@ public class GameController : MonoBehaviour
             //マウスのポジションからRayを投げて何かに当たったらhitに入れる
             if (Physics.Raycast(ray, out hit))
             {
-                //x,zの値を取得
-                int x = (int)hit.collider.gameObject.transform.position.x;
-                int z = (int)hit.collider.gameObject.transform.position.z;
-
-                //マスが空のとき
-                if (board[x, z] == COLOR.EMPTY)
+                //Boardレイヤーなら
+                if(hit.collider.gameObject.layer == 14)
                 {
-                    // 座標が1〜19ならば合法手がどうか調べる 
-                    if (CheckLegal(player, x, z))
+                    //x,zの値を取得
+                    int x = (int)hit.collider.gameObject.transform.position.x;
+                    int z = (int)hit.collider.gameObject.transform.position.z;
+
+                    //マスが空のとき
+                    if (board[x, z] == COLOR.EMPTY)
                     {
-                        SetStone(player, x, z);
+                        // 座標が1〜19ならば合法手がどうか調べる 
+                        if (CheckLegal(player, x, z))
+                        {
+                            SetStone(player, x, z);
+                        }
                     }
                 }
             }
@@ -120,15 +123,21 @@ public class GameController : MonoBehaviour
         {
             for (int j = 0; j < WIDTH; j++)
             {
-                //配列を空（値を０）にする
-                board[i, j] = COLOR.EMPTY;
+                if (board[i, j] != COLOR.EMPTY)
+                {
+                    //配列を空（値を０）にする
+                    board[i, j] = COLOR.EMPTY;
+                    //囲まれた石を消す
+                    if (Physics.Raycast(new Vector3(i, 1, j), Vector3.down, out hit))
+                    {
+                        Destroy(hit.collider.gameObject);
+                    }
+                }
 
                 if (i == 0 || i == WIDTH - 1 || j == 0 || j == WIDTH - 1)
                 {
                     board[i, j] = COLOR.WHITE;
-                    //Stoneを出力
-                    GameObject stone = Instantiate(OutWhiteStone);
-                    stone.transform.position = new Vector3(i, 0, j);
+                    GameObject stone = Instantiate(OutWhiteStone, new Vector3(i, 0, j), Quaternion.identity);
                 }
             }
         }
@@ -143,10 +152,13 @@ public class GameController : MonoBehaviour
             {
                 if (i == 0 || i == WIDTH - 1 || j == 0 || j == WIDTH - 1)
                 {
-                    board[i, j] = COLOR.WHITE;
-                    //Stoneを出力
-                    //GameObject stone = Instantiate(whiteStone);
-                    //stone.transform.position = new Vector3(i, 0, j);
+                    
+                    if (board[i, j] != COLOR.WHITE)
+                    {
+                        board[i, j] = COLOR.WHITE;
+                        //Stoneを出力
+                        GameObject stone = Instantiate(OutWhiteStone, new Vector3(i, 0, j), Quaternion.identity);
+                    }
                 }
             }
         }
@@ -184,6 +196,7 @@ public class GameController : MonoBehaviour
         if (CheckSuicide(color, x, z))
         {
             Debug.Log("自殺手");
+            audioSource.PlayOneShot(audioSource.GetComponent<Test>().sound3);
 
             return false;
         }
@@ -202,6 +215,8 @@ public class GameController : MonoBehaviour
 
         /* マークのクリア */
         ClearLegalCheckBoard();
+        ClearCheckStoneBoard();
+
         /* 相手の色を求める */
         COLOR opponent = OpponentColor(color);
 
@@ -217,6 +232,8 @@ public class GameController : MonoBehaviour
                 {
                     /* マークのクリア */
                     ClearLegalCheckBoard();
+                    ClearCheckStoneBoard();
+
                     /* 相手の石は囲まれているか？ */
                     /* 相手の石を取れるので自殺手ではない */
                     if (DoCheckRemoveStone(opponent, x - 1, z))
@@ -235,6 +252,8 @@ public class GameController : MonoBehaviour
                 {
                     /* マークのクリア */
                     ClearLegalCheckBoard();
+                    ClearCheckStoneBoard();
+
                     /* 相手の石は囲まれているか？ */
                     /* 相手の石を取れるので自殺手ではない */
                     if (DoCheckRemoveStone(opponent, x, z - 1))
@@ -253,6 +272,8 @@ public class GameController : MonoBehaviour
                 {
                     /* マークのクリア */
                     ClearLegalCheckBoard();
+                    ClearCheckStoneBoard();
+
                     /* 相手の石は囲まれているか？ */
                     /* 相手の石を取れるので自殺手ではない */
                     if (DoCheckRemoveStone(opponent, x + 1, z))
@@ -271,6 +292,7 @@ public class GameController : MonoBehaviour
                 {
                     /* マークのクリア */
                     ClearLegalCheckBoard();
+                    ClearCheckStoneBoard();
                     /* 相手の石は囲まれているか？ */
                     /* 相手の石を取れるので自殺手ではない */
                     if (DoCheckRemoveStone(opponent, x, z + 1))
@@ -453,6 +475,7 @@ public class GameController : MonoBehaviour
 
         /* 取り除かれた石の総数 */
         prisonerAll = prisonerN + prisonerE + prisonerS + prisonerW;
+        //StoneCount = prisonerN + prisonerE + prisonerS + prisonerW;
     }
 
 
@@ -478,12 +501,19 @@ public class GameController : MonoBehaviour
 
         /* マークのクリア */
         ClearLegalCheckBoard();
+        //まーくのクリア
+        ClearCheckStoneBoard();
 
         /* 囲まれているなら取る */
         if (DoCheckRemoveStone(board[x, z], x, z))
         {
             prisoner = DoRemoveStone(board[x, z], x, z, 0);
+            StoneCount = prisoner;
             MakeLine();
+            //GameObject empBox = Instantiate(emptyBox, new Vector3(x, 1, z), Quaternion.identity);
+            //empBox.gameObject.transform.parent = GameObject.Find("Empty").transform;
+            emptyBox.SetActive(true);
+            Invoke("SetEmpty", 0.8f);
 
             return (prisoner);
         }
@@ -502,7 +532,7 @@ public class GameController : MonoBehaviour
 
             /* 取った石の数を１つ増やす */
             prisoner++;
-
+            
             StorageStone(color, x, z, 0);
 
 
@@ -514,6 +544,8 @@ public class GameController : MonoBehaviour
             {
                 Destroy(hit.collider.gameObject);
             }
+            
+            
 
             /* 左を調べる */
             if (x >= 1)
@@ -590,7 +622,6 @@ public class GameController : MonoBehaviour
 
                     if (board[x + X, z + Z] == opponent)
                     {
-
                         //囲んだきた石をリストに格納
                         if (Physics.Raycast(new Vector3(x + X, 1, z + Z), Vector3.down, out hit))
                         {
@@ -649,7 +680,13 @@ public class GameController : MonoBehaviour
     void MakeLine()
     {
         // ゲームオブジェクトを生成します。
-        GameObject beam = Instantiate(finishBeamObj, new Vector3(0,0.5f,0), Quaternion.identity);
+        GameObject beam = Instantiate(finishBeamObj, new Vector3(0,1f,0), Quaternion.identity);
+        Debug.Log(StoneCount);
+        beam.GetComponent<LineManager>().StoneCount = this.StoneCount;
+        StoneCount = 0;
+
+        
+
         // LineRenderer取得
         LineRenderer line = beam.GetComponent<LineRenderer>();
         //beam.GetComponent<Rigidbody2D>().simulated = true;
@@ -670,19 +707,20 @@ public class GameController : MonoBehaviour
             //石のラインを消す
             if (lineStoneList[i].gameObject)
             {
-                
+                if (lineStoneList[i].gameObject.GetComponent<WhiteStoneManager>() != null)
+                {
                     for (int j = 0; j < lineStoneList[i].gameObject.GetComponent<WhiteStoneManager>().lineList.Count; j++)
                     {
                         Destroy(lineStoneList[i].GetComponent<WhiteStoneManager>().lineList[j]);
                     }
-                
+                }
                 // 石を消す
                 Destroy(lineStoneList[i]);
                 board[x, z] = COLOR.EMPTY;
             }
         }
-            beam.AddComponent<PolygonCollider2D>();
-        beam.GetComponent<PolygonCollider2D>().isTrigger = true;
+            beam.AddComponent<BoxCollider>();
+        beam.GetComponent<BoxCollider>().isTrigger = true;
 
         lineStoneList.Clear();
         lineStonePosList.Clear();
@@ -722,6 +760,13 @@ public class GameController : MonoBehaviour
 
     void MakeBlack()
     {
+        /*if(BlackNum>20)
+            {
+                Invoke("InitializeArray", 10);  
+            }else{
+                CancelInvoke("InitializeArray");
+            }*/
+        ResetBoard();
 
         IntervalManager();
         if (rndint == 1)
@@ -770,4 +815,20 @@ public class GameController : MonoBehaviour
         rndint = Random.Range(1, 4);
     }
 
+    void ResetBoard()
+    {
+        if (BlackNum > 27)
+        {
+            Invoke("InitializeArray", 20);
+        }
+        else
+        {
+            CancelInvoke("InitializeArray");
+        }
+    }
+
+    void SetEmpty()
+    {
+        emptyBox.SetActive(false);
+    }
 }
