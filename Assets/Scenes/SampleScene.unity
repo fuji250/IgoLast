@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8474688}
   m_Layer: 14
-  m_Name: Lines
+  m_Name: FieldLines
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -642,6 +642,37 @@ Transform:
   m_Father: {fileID: 8474688}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!1 &475962782
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 475962783}
+  m_Layer: 14
+  m_Name: ConnectingLines
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &475962783
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 475962782}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1301506456}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &504772910
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1309,6 +1340,7 @@ GameObject:
   - component: {fileID: 1158994446}
   - component: {fileID: 1158994445}
   - component: {fileID: 1158994444}
+  - component: {fileID: 1158994447}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -1471,6 +1503,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   OpponentProtocol: 0
+--- !u!114 &1158994447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1158994441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 204420b52e184ed4b818a76741dc6dcb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  linePrefab: {fileID: 1466717351286252944, guid: dcd332c677814a347a96dddd2356c602, type: 3}
+  lineParent: {fileID: 475962783}
 --- !u!1 &1301506455
 GameObject:
   m_ObjectHideFlags: 0
@@ -1501,6 +1547,7 @@ Transform:
   m_Children:
   - {fileID: 8474688}
   - {fileID: 847675855}
+  - {fileID: 475962783}
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1765,7 +1812,7 @@ GameObject:
   - component: {fileID: 1758194446}
   - component: {fileID: 1758194445}
   m_Layer: 0
-  m_Name: LineFactory
+  m_Name: SiegingLineFactory
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1784,6 +1831,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   linePrefab: {fileID: 1019549431400141235, guid: fb2f7512a45630443a249b48d14f6d22, type: 3}
+  linePrefabOpponent: {fileID: 1019549431400141235, guid: a0477925e51f1ff459cc343fe65d7b98, type: 3}
 --- !u!4 &1758194446
 Transform:
   m_ObjectHideFlags: 0

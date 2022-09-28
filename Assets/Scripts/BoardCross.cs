@@ -95,6 +95,9 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
 
             // ビジュアルも反映させる
             UpdateBoardVis(value);
+
+            //BlackStone.localScale = Vector3.one;
+            //WhiteStone.localScale = Vector3.one;
         }
     }
     /// <summary>
@@ -122,6 +125,47 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     /// </summary>
     [SerializeField]
     private Transform WhiteStone;
+    #endregion
+
+    #region 目の寿命等
+    /// <summary>
+    /// 石が置かれてから消えるまでの時間（秒）
+    /// 寿命概念を消すと線引きがうまく行くので一旦十分大きな値に飛ばすことにする
+    /// </summary>
+    public static float LifeSpan
+    {
+        set; get;
+    } = 100000f;
+    /// <summary>
+    /// 石が置かれてからの経過時間（秒）
+    /// </summary>
+    private float stoneAge;
+    /// <summary>
+    /// 石が置かれてからの経過時間（秒）
+    /// Updateで毎フレーム加算する
+    /// </summary>
+    public float StoneAge
+    {
+        private set
+        {
+            stoneAge = value;
+
+            // 寿命に応じて石の大きさを変えようと思ったけど見づらいのでやめた
+            //BlackStone.localScale = Vector3.one * (1f - stoneAge / LifeSpan);
+            //WhiteStone.localScale = Vector3.one * (1f - stoneAge / LifeSpan);
+
+            // 寿命を超えた場合は石を取り除く
+            if (LifeSpan < stoneAge)
+            {
+                stoneAge = 0f;
+                BoardStatus = IsOut ? Status.Out : Status.None;
+            }
+        }
+        get
+        {
+            return stoneAge;
+        }
+    }
     #endregion
 
     #region 目の相対関係等
@@ -257,16 +301,16 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         }
     }
     /// <summary>
-    /// Fieldのうち、何も置かれていない場所
+    /// 隣接する8つの目の中で、味方の色の石が置いてある目の集合
     /// </summary>
-    public static List<BoardCross> EmptyField
+    public List<BoardCross> AllyNeighborhood8
     {
         get
         {
             List<BoardCross> result = new List<BoardCross>();
-            foreach (BoardCross board in Field)
+            foreach (BoardCross board in Neighborhood8)
             {
-                if (board.BoardStatus == Status.None)
+                if (board.BoardStatus == BoardStatus)
                 {
                     result.Add(board);
                 }
@@ -274,12 +318,193 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
             return result;
         }
     }
+    /// <summary>
+    /// 特定の状態の目の個数を数える
+    /// </summary>
+    /// <param name="status">数えたい目の状態</param>
+    /// <returns></returns>
+    private static List<BoardCross> Count(Status status)
+    {
+        List<BoardCross> result = new List<BoardCross>();
+        foreach (BoardCross board in Field)
+        {
+            if (board.BoardStatus == status)
+            {
+                result.Add(board);
+            }
+        }
+        return result;
+    }
+    /// <summary>
+    /// Fieldのうち、黒石がある場所
+    /// </summary>
+    public static List<BoardCross> BlackField
+    {
+        get
+        {
+            return Count(Status.Black);
+        }
+    }
+    /// <summary>
+    /// Fieldのうち、白石がある場所
+    /// </summary>
+    public static List<BoardCross> WhiteField
+    {
+        get
+        {
+            return Count(Status.White);
+        }
+    }
+    /// <summary>
+    /// Fieldのうち、何も置かれていない場所
+    /// </summary>
+    public static List<BoardCross> EmptyField
+    {
+        get
+        {
+            return Count(Status.None);
+        }
+    }
+    /// <summary>
+    /// Fieldの外側
+    /// </summary>
+    public static List<BoardCross> OutField
+    {
+        get
+        {
+            return Count(Status.Out);
+        }
+    }
+    /// <summary>
+    /// この目と連結関係にある目のリスト
+    /// 隣接していて、かつ同じ状態（空、黒、白）の目を返す
+    /// </summary>
+    public List<BoardCross> ConnectedBoardCross
+    {
+        get
+        {
+            // 返り値
+            List<BoardCross> result = new List<BoardCross>();
+
+            // 無限ループ対策
+            int count = 0;
+
+            // 候補のキュー
+            Queue<BoardCross> Candidates = new Queue<BoardCross>();
+            Candidates.Enqueue(this);
+
+            // オリジナルの状態
+            Status originalStatus = BoardStatus;
+
+            // 捜査フラグを解除する
+            ClearAlreadyCheckedFlag();
+
+            while(Candidates.Count > 0)
+            {
+                // 新しく候補を取り出す
+                var candidate = Candidates.Dequeue();
+                
+                // 外側なら何もしない
+                if (candidate.IsOut)
+                {
+                    continue;
+                }
+
+                // もう調べていたら何もしない
+                if (candidate.isCheckedSieged)
+                {
+                    continue;
+                }
+                candidate.isCheckedSieged = true;
+
+                // 元の色と同色でないなら何もしない
+                if (candidate.BoardStatus != originalStatus)
+                {
+                    continue;
+                }
+
+                // もうリストに格納されているなら何もしない
+                if (result.Contains(candidate))
+                {
+                    continue;
+                }
+
+                // リストに格納
+                result.Add(candidate);
+
+                // 候補に隣接する目を候補に追加
+                foreach (BoardCross neighborhood in candidate.Neighborhood4)
+                {
+                    if (!neighborhood.IsOut)
+                    {
+                        Candidates.Enqueue(neighborhood);
+                    }
+                }
+
+                // 無限ループ対策
+                count++;
+                if (count > 200)
+                {
+                    Debug.LogError("BoarCross.ConnectedBoardCross: Too many iteration!");
+                    return result;
+                }
+            }
+
+            return result;
+        }
+    }
+    /// <summary>
+    /// この石の呼吸点
+    /// </summary>
+    /// <param name="connected">連結した石のリスト</param>
+    public static List<BoardCross> BreathPoint(List<BoardCross> connected)
+    {
+        // 石が置かれた目が渡されていなければ何もしない
+        if (connected[0].BoardStatus == Status.None || connected[0].boardStatus == Status.Out)
+        {
+            return new List<BoardCross>();
+        }
+
+        List<BoardCross> result = new List<BoardCross>();
+        foreach (BoardCross board in connected)
+        {
+            // 連結した石と隣接する目で、空状態の目を探す
+            foreach (BoardCross neighborhood in board.Neighborhood4)
+            {
+                if (neighborhood.BoardStatus == Status.None)
+                {
+                    result.Add(neighborhood);
+                }
+            }
+        }
+        return result;
+    }
     #endregion
 
     /// <summary>
     /// 囲い石の際にチェック済みかどうか調べるのに使う
     /// </summary>
     private bool isCheckedSieged = false;
+
+    /// <summary>
+    /// この目から伸びている線
+    /// </summary>
+    public List<ConnectingLine> ConnectingLines
+    {
+        get
+        {
+            return ConnectingLine.Find(this);
+        }
+    }
+
+    private void Update()
+    {
+        // 石が置かれてからの時間を加算
+        if (BoardStatus == Status.Black || BoardStatus == Status.White)
+        {
+            StoneAge += Time.deltaTime;
+        }
+    }
 
     /// <summary>
     /// 初期化
@@ -313,7 +538,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     /// <summary>
     /// 石を全て取り除く
     /// </summary>
-    public static void ClearStone()
+    public static void ClearStoneAll()
     {
         foreach (BoardCross board in Field)
         {
@@ -324,7 +549,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     /// 碁盤上の所定座標に移動する
     /// </summary>
     /// <param name="pos">(1, 9)×(1, 9)</param>
-    public void TranslateBoard(Vector2 coordinate)
+    private void TranslateBoard(Vector2 coordinate)
     {
         TranslateBoard((int)coordinate.x, (int)coordinate.y);
     }
@@ -333,116 +558,53 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     /// </summary>
     /// <param name="x">x座標 1～9</param>
     /// <param name="z">z座標 1～9</param>
-    public void TranslateBoard(int x, int z)
+    private void TranslateBoard(int x, int z)
     {
         transform.position = new Vector3(x, 0f, z) + new Vector3(CenterCoordinate.x, 0f, CenterCoordinate.y) - new Vector3(5f, 0f, 5f);
     }
     /// <summary>
-    /// 盤面のビジュアルを更新する
+    /// 盤面のビジュアル（空、黒石、白石）を更新する
     /// </summary>
     /// <param name="nextStatus"></param>
     private void UpdateBoardVis(Status nextStatus)
     {
-        // ビジュアルの更新
+        // 石の色の更新
         BlackStone.gameObject.SetActive(nextStatus == Status.Black);
         WhiteStone.gameObject.SetActive(nextStatus == Status.White);
+
+        // 石が置かれていないのに線があるなら消す
+        if (nextStatus != Status.Black && nextStatus != Status.White)
+        {
+            foreach (ConnectingLine line in ConnectingLines)
+            {
+                line.IsVisible = false;
+            }
+        }
     }
     /// <summary>
     /// 調べる場所にある石が相手に囲まれているか調べる
     /// </summary>
     /// <param name="thisBoardCross">最初に調べる場所</param>
     /// <returns></returns>
-    public bool IsSieged(BoardCross thisBoardCross)
+    public bool IsSieged()
     {
         // チェック履歴をクリアする
         ClearAlreadyCheckedFlag();
 
-        // 外側なら何もしない
-        if (IsOut)
+        // 石が置かれていないなら何もしない
+        if (BoardStatus != Status.Black && BoardStatus != Status.White)
         {
             return false;
         }
 
-        // 再帰関数を回す
-        var result = IsSiegedItr(BoardStatus, thisBoardCross); // ほんとは他と同じでキュー方式にしたい
-        return result;
-    }
-    /// <summary>
-    /// IsSiegedの再帰処理部分
-    /// </summary>
-    /// <param name="originalStatus">最初に調べる場所の状態</param>
-    /// <param name="thisBoardCross">（再帰の中で）現在注目している場所</param>
-    /// <returns>この場所の石が囲まれていない</returns>
-    private bool IsSiegedItr(Status originalStatus, BoardCross thisBoardCross)
-    {
-        // この場所を既に調べていたら終わり
-        if (thisBoardCross.isCheckedSieged)
-        {
-            return true;
-        }
+        // この石に連結した石を全て取り出す
+        var connected = ConnectedBoardCross;
 
-        // 調べた場所をマークする
-        thisBoardCross.isCheckedSieged = true;
+        // この連結した石の呼吸点を全て取り出す
+        var breath = BreathPoint(connected);
 
-        // 何も置かれていなければ終わり
-        if (thisBoardCross.BoardStatus == Status.None)
-        {
-            return false;
-        }
-
-        // 外なら囲われているのと同じ
-        if (thisBoardCross.boardStatus == Status.Out)
-        {
-            return true;
-        }
-
-        // 今調べている石とオリジナルの石が同じ色ならばその隣の石も調べる
-        // 隣の石が生きているならば、この石も生きている
-        if (thisBoardCross.BoardStatus == originalStatus)
-        {
-            //Debug.Log($"{thisBoardCross.coordinate}");
-            var result = true;
-            // 左側を捜査
-            if (!thisBoardCross.Left.IsOut)
-            {
-                result = IsSiegedItr(originalStatus, thisBoardCross.Left);
-                if (!result)
-                {
-                    return false;
-                }
-            }
-            // 下側を捜査
-            if (!thisBoardCross.Down.IsOut)
-            {
-                result = IsSiegedItr(originalStatus, thisBoardCross.Down);
-
-                // 脇の石が囲われていないならば、自分も囲われていない
-                if (!result)
-                {
-                    return false;
-                }
-            }
-            // 右側を捜査
-            if (!thisBoardCross.Right.IsOut)
-            {
-                result = IsSiegedItr(originalStatus, thisBoardCross.Right);
-                if (!result)
-                {
-                    return false;
-                }
-            }
-            // 上側を捜査
-            if (!thisBoardCross.Up.IsOut)
-            {
-                result = IsSiegedItr(originalStatus, thisBoardCross.Up);
-                if (!result)
-                {
-                    return false;
-                }
-            }
-        }
-        // この石が囲われている
-        return true;
+        // 呼吸点の有無
+        return breath.Count == 0;
     }
     /// <summary>
     /// 置いた石の上下左右に相手の囲われた石があるなら取る
@@ -479,63 +641,26 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         }
 
         // 追加する前にリセット
-        LineFactory.Instance.ResetSiegedBoardCross();
+        SiegingLineFactory.Instance.ResetSiegedBoardCross();
 
         // 囲まれてないなら何もしない
-        if (!IsSieged(this))
+        if (!IsSieged())
         {
             return new List<BoardCross>();
         }
 
-        ClearAlreadyCheckedFlag();
-
-        // 返り値
-        List<BoardCross> result = new List<BoardCross>();
-
-        // 取る石の候補
-        Queue<BoardCross> Candidates = new Queue<BoardCross>();
-
-        // キューに自身を追加
-        Candidates.Enqueue(this);
-
-        while (Candidates.Count > 0)
-        {
-            // キューから1つ取り出す
-            BoardCross candidate = Candidates.Dequeue();
-
-            // もう調べてあるなら何もしない
-            if (candidate.isCheckedSieged) continue;
-
-            // 調べたことを記録
-            candidate.isCheckedSieged = true;
-
-            // 色が元の色と異なるなら何もしない
-            if (candidate.BoardStatus != BoardStatus) continue;
-
-            // 返り値に追加
-            result.Add(candidate);
-
-            // LineFactoryの囲われた石のリストにも追加
-            LineFactory.Instance.AddSiegedBoardCross(candidate);
-
-            // 候補の隣の石も候補に加える
-            foreach (BoardCross neighborhood in candidate.Neighborhood4)
-            {
-                if (!neighborhood.IsOut)
-                {
-                    Candidates.Enqueue(neighborhood);
-                }
-            }
-        }
+        // この石と連結された石を全て取得
+        var result = ConnectedBoardCross;
 
         // 返り値になっている目の石を取り除く
         foreach (BoardCross board in result)
         {
             board.BoardStatus = Status.None;
+            SiegingLineFactory.Instance.AddSiegedBoardCross(board);
         }
 
-        // 線を生成する
-        LineFactory.Instance.GenerateLineInstance();
+        // 線を生成する（石の色により出る線の色を場合分け）
+        SiegingLineFactory.Instance.GenerateSiegingLineInstance(playerColor == GameController.Instance.playerColor);
 
         return result;
     }
@@ -550,7 +675,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         BoardStatus = nextMove;
 
         // 仮に置いた石が相手に囲まれているならば自殺手の可能性あり
-        if (IsSieged(this))
+        if (IsSieged())
         {
             // その石を置いたことにより、隣の相手の石が取れるなら自殺手ではない
             // 隣は相手？
@@ -559,7 +684,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
                 if (neighborhood.BoardStatus == OpponentStatus)
                 {
                     // 相手のが囲まれているなら自殺手ではない
-                    if (neighborhood.IsSieged(neighborhood))
+                    if (neighborhood.IsSieged())
                     {
                         BoardStatus = Status.None;
                         return false;
@@ -595,8 +720,8 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         }
 
         // 一手前にコウを取られていたら置けない
-        // 履歴作るのちょっと面倒くさいので略
-        // UndoSystemを作るという説がある
+        // 履歴作るのちょっと面倒くさい
+        // どうせ石を取った石も同時に無くなるならコウは存在しなくなるので省略
 
         // 自殺手なら置けない
         if (IsSuicide(nextMove))
@@ -605,6 +730,32 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         }
 
         return true;
+    }
+    /// <summary>
+    /// 自身が相手の石に接している時、その相手の石が隣り合っていれば、それらを線で結ぶ
+    /// </summary>
+    public void ActivateOpponentLine()
+    {
+        // 隣り合う相手の石または自分自身の入ったリストを取得
+        // 自分が空状態の場合は、隣り合う自分と相手の石を全て取得
+        List<BoardCross> Siegings = SiegingBoardCross(ConnectedBoardCross);
+        foreach (BoardCross sieging in Siegings)
+        {
+            // 相手の石でない（自分自身である）なら何もしない
+            if (sieging.BoardStatus != OpponentStatus)
+            {
+                continue;
+            }
+
+            foreach (BoardCross neighborhood in sieging.Neighborhood8)
+            {
+                if (Siegings.Contains(neighborhood) && neighborhood.BoardStatus == OpponentStatus)
+                {
+                    ConnectingLine line = ConnectingLine.Find(sieging, neighborhood);
+                    line.IsVisible = true;
+                }
+            }
+        }
     }
     
     /// <summary>
@@ -631,15 +782,23 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
             // 囲われた石の周りで捜査
             foreach (BoardCross neighborhood in board.Neighborhood4)
             {
+                // もうリストに格納されているなら何もしない
+                if (result.Contains(neighborhood))
+                {
+                    continue;
+                }
+
                 // 相手の石があったら追加
-                // 黒も白もカウントする
-                if (neighborhood.BoardStatus == BoardCross.Status.Black || neighborhood.BoardStatus == BoardCross.Status.White)
+                // 囲われた石が既に取られていて空の状態になっている場合は、黒も白もカウントする
+                if ((board.BoardStatus == Status.None && (neighborhood.BoardStatus == Status.Black || neighborhood.BoardStatus == Status.White)) ||
+                    (board.BoardStatus == Status.Black && neighborhood.boardStatus == Status.White) ||
+                    (board.BoardStatus == Status.White && neighborhood.boardStatus == Status.Black))
                 {
                     result.Add(neighborhood);
                 }
 
                 // 角だったらboard自身を追加
-                if (neighborhood.BoardStatus == BoardCross.Status.Out && !result.Contains(board))
+                if (neighborhood.BoardStatus == Status.Out && !result.Contains(board))
                 {
                     result.Add(board);
                 }
@@ -647,9 +806,8 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         }
         return result;
     }
-
     /// <summary>
-    /// 与えたリストが一筆書きになるようにリストをソートする
+    /// 輪を描くような石の列のリストが一筆書きになるようにリストをソートする
     /// </summary>
     /// <param name="list">輪を描くような石の列</param>
     public static List<BoardCross> SortOneStroke(List<BoardCross> list)
@@ -663,7 +821,6 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         list.Sort();
         // 左下
         BoardCross next = list[0];
-        //Debug.Log($"BoardCross.SortOnStroke: fist = {next.coordinate}");
         result.Add(next);
 
         // 何かの拍子に無限ループしちゃった時の対策

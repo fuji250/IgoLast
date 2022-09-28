@@ -20,12 +20,33 @@ public class OpponentController : Singleton<OpponentController>
     public Protocol OpponentProtocol;
 
     /// <summary>
-    /// 打ってから次の手を打つまでの時間
+    /// 打ってから次の手を打つまでの平均時間
     /// </summary>
-    public float Span
+    public float SpanAverage
+    {
+        set; get;
+    } = 4f;
+    /// <summary>
+    /// 打ってから次の手を打つまでの時間の分散
+    /// </summary>
+    public float SpanVariance
     {
         set; get;
     } = 1f;
+    /// <summary>
+    /// 打ってから次の手を打つまでの時間
+    /// ボックス＝ミュラー法によって生成される正規分布を返す
+    /// https://imagingsolution.net/program/csharp/normal-random/
+    /// </summary>
+    public float SpanGauss
+    {
+        get
+        {
+            float x = Random.Range(0f, 1f);
+            float y = Random.Range(0f, 1f);
+            return Mathf.Sqrt(SpanVariance) * Mathf.Sqrt(-2f * Mathf.Log(x)) * Mathf.Cos(2f * Mathf.PI * y) + SpanAverage;
+        }
+    }
     /// <summary>
     /// 最後の手を打ってからの時間
     /// </summary>
@@ -40,7 +61,7 @@ public class OpponentController : Singleton<OpponentController>
     {
         get
         {
-            return Span < TimeFromLastMove;
+            return SpanGauss < TimeFromLastMove;
         }
     }
 

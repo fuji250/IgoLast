@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 石を消す時に出る線のインスタンス
 /// </summary>
-public class LineInstance : MonoBehaviour
+public class SiegingLine : MonoBehaviour
 {
     /// <summary>
     /// 広がって消えるアニメーション

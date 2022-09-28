@@ -63,6 +63,9 @@ public class GameController : Singleton<GameController>
                 board.Initialize(i, j);
             }
         }
+
+        // 線生成
+        ConnectingLineFactory.Instance.GenerateConnectingLineInstance();
     }
 
     private void Update()
@@ -99,10 +102,23 @@ public class GameController : Singleton<GameController>
                             sieging.BoardStatus = BoardCross.Status.None;
                         }
                         
-                        // 音を鳴らす
+                        // 取り除いた場合、音を鳴らす
                         if (Prisoners.Count > 0)
                         {
                             AudioController.Instance.PlayRemoveStone();
+                        }
+
+                        // 取り除かなかった場合、置いた石に接している石に対して、線が引けるなら引く
+                        else
+                        {
+                            //board.ActivateOpponentLine();
+                            foreach (BoardCross neighborhood in board.Neighborhood8)
+                            {
+                                if (neighborhood.BoardStatus == board.OpponentStatus)
+                                {
+                                    neighborhood.ActivateOpponentLine();
+                                }
+                            }
                         }
 
                         // 最後の手を打った時間をリセット
@@ -117,6 +133,7 @@ public class GameController : Singleton<GameController>
             }
         }
 
+        
         // 相手（COM）の手
         if (OpponentController.Instance.IsCooledDown)
         {
@@ -144,8 +161,18 @@ public class GameController : Singleton<GameController>
                 {
                     AudioController.Instance.PlayRemoveStone();
                 }
+
+                // 取り除かなかった場合、置いた石に線が引けるなら引く
+                else
+                {
+                    board.ActivateOpponentLine();
+                }
             }
         }
+        
+
+        // 相手の石が一定数を超えた場合はリセット
+        // たぶん盤面が埋まることは無いので一旦保留
 
         // 時間更新
         timeFromLastMove += Time.deltaTime;
@@ -178,7 +205,7 @@ public class GameController : Singleton<GameController>
             // 盤面リセット
             if (GUILayout.Button("Reset Board"))
             {
-                BoardCross.ClearStone();
+                BoardCross.ClearStoneAll();
             }
 
             // 最後の手を打ってからの時間表示
@@ -192,9 +219,9 @@ public class GameController : Singleton<GameController>
             GUILayout.BeginHorizontal();
             GUILayout.Label("COM Span:");
             GUILayout.FlexibleSpace();
-            GUILayout.Label($"{OpponentController.Instance.Span:0.00} sec");
+            GUILayout.Label($"{OpponentController.Instance.SpanAverage:0.00} sec");
             GUILayout.EndHorizontal();
-            OpponentController.Instance.Span = GUILayout.HorizontalSlider(OpponentController.Instance.Span, 0f, 10f);
+            OpponentController.Instance.SpanAverage = GUILayout.HorizontalSlider(OpponentController.Instance.SpanAverage, 0f, 10f);
 
             // 移動可
             GUI.DragWindow();
