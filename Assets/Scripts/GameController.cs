@@ -42,12 +42,50 @@ public class GameController : Singleton<GameController>
             }
         }
     }
+    /// <summary>
+    /// 相手の石の数
+    /// </summary>
+    public int OpponentStonesCount
+    {
+        get
+        {
+            if (opponentColor == BoardCross.Status.Black)
+            {
+                return BoardCross.BlackField.Count;
+            }
+            if (opponentColor == BoardCross.Status.White)
+            {
+                return BoardCross.WhiteField.Count;
+            }
+            return 0;
+        }
+    }
+    /// <summary>
+    /// 相手が置ける石の最大値
+    /// これを過ぎるとゲームオーバー
+    /// </summary>
+    public int maxOpponentStonesCount = 50;
 
     /// <summary>
     /// 最後の手を打ってからの時間
     /// </summary>
     [HideInInspector]
     public float timeFromLastMove = 0f;
+    [SerializeField]
+    private float maxTimeFromLastMove = 60f;
+
+    /// <summary>
+    /// ゲームの種類
+    /// </summary>
+    public enum GameType
+    {
+        PlayWithComputer,   // コンピュータと対局
+        Demo                // デモ
+    }
+    /// <summary>
+    /// 現在のゲームの種類
+    /// </summary>
+    public GameType currentGameType;
 
     protected override void Awake()
     {
@@ -70,109 +108,185 @@ public class GameController : Singleton<GameController>
 
     private void Update()
     {
-        // マウスクリック
-        if (Input.GetMouseButtonDown(0))
+        // コンピュータと対局
+        if (currentGameType == GameType.PlayWithComputer)
         {
-            // マウスのポジションを取得してRayに代入
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            // マウスのポジションからRayを投げて何かに当たったらhitに入れる
-            if (Physics.Raycast(ray, out hit))
+            // マウスクリック
+            if (Input.GetMouseButtonDown(0))
             {
-                // Boardレイヤーなら
-                BoardCross board = hit.collider.GetComponent<BoardCross>();
-                if (board != null)
+                // マウスのポジションを取得してRayに代入
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                // マウスのポジションからRayを投げて何かに当たったらhitに入れる
+                if (Physics.Raycast(ray, out hit))
                 {
-                    // 合法手がどうか調べる 
-                    if (board.IsLegalMove(playerColor))
+                    // Boardレイヤーなら
+                    BoardCross board = hit.collider.GetComponent<BoardCross>();
+                    if (board != null)
                     {
-                        // 石を置く
-                        board.BoardStatus = playerColor;
-
-                        // 石を打つ音
-                        AudioController.Instance.PlayPutStone();
-
-                        // 隣の石を取り除く
-                        List<BoardCross> Prisoners = board.RemoveStoneAll(playerColor);
-
-                        // 石を取った石も取り除く
-                        List<BoardCross> SiegingStone = BoardCross.SiegingBoardCross(Prisoners);
-                        foreach (BoardCross sieging in SiegingStone)
+                        // 合法手がどうか調べる 
+                        if (board.IsLegalMove(playerColor))
                         {
-                            sieging.BoardStatus = BoardCross.Status.None;
-                        }
-                        
-                        // 取り除いた場合、音を鳴らす
-                        if (Prisoners.Count > 0)
-                        {
-                            AudioController.Instance.PlayRemoveStone();
-                        }
+                            // 石を置く
+                            board.BoardStatus = playerColor;
 
-                        // 取り除かなかった場合、置いた石に接している石に対して、線が引けるなら引く
-                        else
-                        {
-                            //board.ActivateOpponentLine();
-                            foreach (BoardCross neighborhood in board.Neighborhood8)
+                            // 石を打つ音
+                            AudioController.Instance.PlayPutStone();
+
+                            // 隣の石を取り除く
+                            List<BoardCross> Prisoners = board.RemoveStoneAll(playerColor);
+
+                            // 石を取った石も取り除く
+                            List<BoardCross> SiegingStone = BoardCross.SiegingBoardCross(Prisoners);
+                            foreach (BoardCross sieging in SiegingStone)
                             {
-                                if (neighborhood.BoardStatus == board.OpponentStatus)
+                                sieging.BoardStatus = BoardCross.Status.None;
+                            }
+
+                            // 取り除いた場合、音を鳴らす
+                            if (Prisoners.Count > 0)
+                            {
+                                AudioController.Instance.PlayRemoveStone();
+
+                                // コンピュータをちょっとだけ強くする
+                                OpponentController.Instance.SpanAverage -= 0.03f;
+                            }
+
+                            // 取り除かなかった場合、置いた石に接している石に対して、線が引けるなら引く
+                            else
+                            {
+                                //board.ActivateOpponentLine();
+                                foreach (BoardCross neighborhood in board.Neighborhood8)
                                 {
-                                    neighborhood.ActivateOpponentLine();
+                                    if (neighborhood.BoardStatus == board.OpponentStatus)
+                                    {
+                                        neighborhood.ActivateOpponentLine();
+                                    }
                                 }
                             }
-                        }
 
-                        // 最後の手を打った時間をリセット
-                        timeFromLastMove = 0f;
+                            // 最後の手を打った時間をリセット
+                            timeFromLastMove = 0f;
+                        }
+                        else
+                        {
+                            // エラー音
+                            AudioController.Instance.PlayError();
+                        }
                     }
+                }
+            }
+
+            // 相手（COM）の手
+            if (OpponentController.Instance.IsCooledDown)
+            {
+                BoardCross board = OpponentController.Instance.Move(BoardCross.Field);
+                if (board.IsLegalMove(opponentColor))
+                {
+                    // 石を置く
+                    board.BoardStatus = opponentColor;
+
+                    // 石を打つ音
+                    AudioController.Instance.PlayPutStone();
+
+                    // 隣の石を取り除く
+                    List<BoardCross> Prisoners = board.RemoveStoneAll(opponentColor);
+
+                    // 石を取った石も取り除く
+                    List<BoardCross> SiegingStone = BoardCross.SiegingBoardCross(Prisoners);
+                    foreach (BoardCross sieging in SiegingStone)
+                    {
+                        sieging.BoardStatus = BoardCross.Status.None;
+                    }
+
+                    // 音を鳴らす
+                    if (Prisoners.Count > 0)
+                    {
+                        AudioController.Instance.PlayRemoveStone();
+                    }
+
+                    // 取り除かなかった場合、置いた石に線が引けるなら引く
                     else
                     {
-                        // エラー音
-                        AudioController.Instance.PlayError();
+                        board.ActivateOpponentLine();
                     }
                 }
             }
-        }
 
-        
-        // 相手（COM）の手
-        if (OpponentController.Instance.IsCooledDown)
-        {
-            BoardCross board = OpponentController.Instance.Move(BoardCross.Field);
-            if (board.IsLegalMove(opponentColor))
+            // 最後に打った手から一定時間経った場合は、リセットしてデモ状態に移行する
+            if (maxTimeFromLastMove < timeFromLastMove)
             {
-                // 石を置く
-                board.BoardStatus = opponentColor;
-
-                // 石を打つ音
-                AudioController.Instance.PlayPutStone();
-
-                // 隣の石を取り除く
-                List<BoardCross> Prisoners = board.RemoveStoneAll(opponentColor);
-
-                // 石を取った石も取り除く
-                List<BoardCross> SiegingStone = BoardCross.SiegingBoardCross(Prisoners);
-                foreach (BoardCross sieging in SiegingStone)
-                {
-                    sieging.BoardStatus = BoardCross.Status.None;
-                }
-
-                // 音を鳴らす
-                if (Prisoners.Count > 0)
-                {
-                    AudioController.Instance.PlayRemoveStone();
-                }
-
-                // 取り除かなかった場合、置いた石に線が引けるなら引く
-                else
-                {
-                    board.ActivateOpponentLine();
-                }
+                BoardCross.ClearStoneAll();
+                OpponentController.Instance.ResetSpanAverage();
+                DemoController.Instance.InitializeMoveRecord();
+                currentGameType = GameType.Demo;
             }
         }
-        
 
-        // 相手の石が一定数を超えた場合はリセット
-        // たぶん盤面が埋まることは無いので一旦保留
+        // デモ映像
+        else if (currentGameType == GameType.Demo)
+        {
+            // 棋譜がこれ以上ない場合はリセットして棋譜を再初期化する
+            if (DemoController.Instance.MoveRecord.Count <= 0)
+            {
+                Debug.Log($"GameController.Update: Demo MoveRecord does not have next move. Restart.");
+                BoardCross.ClearStoneAll();
+                DemoController.Instance.InitializeMoveRecord();
+            }
+
+            if (DemoController.Instance.IsCooledDown)
+            {
+                // 次の一手を決める
+                BoardCross nextBoard = DemoController.Instance.Move();
+                BoardCross.Status nextColor = DemoController.Instance.NextColor;
+                nextBoard.BoardStatus = nextColor;
+
+                // 石を置く場合
+                if (nextColor == BoardCross.Status.Black || nextColor == BoardCross.Status.White)
+                {
+                    // 石を打つ音
+                    AudioController.Instance.PlayPutStone();
+
+                    // 隣の石を取り除く
+                    List<BoardCross> Prisoners = nextBoard.RemoveStoneAll(nextColor);
+
+                    // 石を取った石も取り除く
+                    List<BoardCross> SiegingStone = BoardCross.SiegingBoardCross(Prisoners);
+                    foreach (BoardCross sieging in SiegingStone)
+                    {
+                        sieging.BoardStatus = BoardCross.Status.None;
+                    }
+
+                    // 音を鳴らす
+                    if (Prisoners.Count > 0)
+                    {
+                        AudioController.Instance.PlayRemoveStone();
+                    }
+
+                    // 取り除かなかった場合、置いた石に線が引けるなら引く
+                    else
+                    {
+                        //nextBoard.ActivateOpponentLine();
+                    }
+                }
+            }
+
+            // マウスクリックをした場合はリセットしてゲーム状態に移行する
+            if (Input.GetMouseButtonDown(0))
+            {
+                BoardCross.ClearStoneAll();
+                OpponentController.Instance.ResetSpanAverage();
+                currentGameType = GameType.PlayWithComputer;
+                timeFromLastMove = 0f;
+            }
+        }
+
+        // 相手の石が一定数を超えた場合はゲームオーバーになりリセットする
+        if (maxOpponentStonesCount <= OpponentStonesCount)
+        {
+            BoardCross.ClearStoneAll();
+            OpponentController.Instance.ResetSpanAverage();
+        }
 
         // 時間更新
         timeFromLastMove += Time.deltaTime;
@@ -185,6 +299,13 @@ public class GameController : Singleton<GameController>
     {
         windowRect = GUI.Window(windowId, windowRect, (Id) =>
         {
+            // ゲームタイプ表示
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Game Type:");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(currentGameType.ToString());
+            GUILayout.EndHorizontal();
+
             // プレイヤーの色を変更
             GUILayout.BeginHorizontal();
             GUILayout.Label("Current Player:");

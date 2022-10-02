@@ -1,25 +1,25 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class AudioController : Singleton<AudioController>
 {
     /// <summary>
-    /// ƒpƒ`ƒ“‚Æ‘Å‚Â‰¹
+    /// ãƒ‘ãƒãƒ³ã¨æ‰“ã¤éŸ³
     /// </summary>
     public AudioClip soundPutStone;
     /// <summary>
-    /// Î‚ğæ‚Á‚½‚Ì‰¹
+    /// çŸ³ã‚’å–ã£ãŸæ™‚ã®éŸ³
     /// </summary>
     public AudioClip soundRemoveStone;
     /// <summary>
-    /// Î‚ğ’u‚¯‚È‚¢‚Ì‰¹
-    /// ƒJ[ƒ\ƒ‹‚ğ“®‚©‚µ‚½‚Æ‚«‚Ì‰¹
+    /// çŸ³ã‚’ç½®ã‘ãªã„æ™‚ã®éŸ³
+    /// ã‚«ãƒ¼ã‚½ãƒ«ã‚’å‹•ã‹ã—ãŸã¨ãã®éŸ³
     /// </summary>
     public AudioClip soundError;
 
     /// <summary>
-    /// ‚±‚ÌƒV[ƒ“‚ÌƒI[ƒfƒBƒIƒ\[ƒX
+    /// ã“ã®ã‚·ãƒ¼ãƒ³ã®ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªã‚½ãƒ¼ã‚¹
     /// </summary>
     private AudioSource audioSource;
 
@@ -29,7 +29,7 @@ public class AudioController : Singleton<AudioController>
         audioSource = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
     }
     /// <summary>
-    /// ‰¹‚ğo‚·iƒGƒCƒŠƒAƒXj
+    /// éŸ³ã‚’å‡ºã™ï¼ˆã‚¨ã‚¤ãƒªã‚¢ã‚¹ï¼‰
     /// </summary>
     /// <param name="clip"></param>
     public void Play(AudioClip clip)
@@ -37,21 +37,21 @@ public class AudioController : Singleton<AudioController>
         audioSource.PlayOneShot(clip);
     }
     /// <summary>
-    /// Î‚ğ‘Å‚Â‰¹
+    /// çŸ³ã‚’æ‰“ã¤éŸ³
     /// </summary>
     public void PlayPutStone()
     {
         Play(soundPutStone);
     }
     /// <summary>
-    /// Î‚ğæ‚é‰¹
+    /// çŸ³ã‚’å–ã‚‹éŸ³
     /// </summary>
     public void PlayRemoveStone()
     {
         Play(soundRemoveStone);
     }
     /// <summary>
-    /// ƒGƒ‰[‚ªo‚½‚Ì‰¹
+    /// ã‚¨ãƒ©ãƒ¼ãŒå‡ºãŸæ™‚ã®éŸ³
     /// </summary>
     public void PlayError()
     {

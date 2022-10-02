@@ -905,7 +905,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 50
   field of view: 60
-  orthographic: 1
+  orthographic: 0
   orthographic size: 5
   m_Depth: -1
   m_CullingMask:
@@ -1338,9 +1338,11 @@ GameObject:
   - component: {fileID: 1158994443}
   - component: {fileID: 1158994442}
   - component: {fileID: 1158994446}
+  - component: {fileID: 1158994448}
   - component: {fileID: 1158994445}
   - component: {fileID: 1158994444}
   - component: {fileID: 1158994447}
+  - component: {fileID: 1158994449}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -1363,7 +1365,10 @@ MonoBehaviour:
   BoardCrossPrefab: {fileID: 1018254985750735390, guid: f1c8519a65c754e47ad2b4ac47ec56a6, type: 3}
   BoardCrossParent: {fileID: 847675855}
   playerColor: 2
+  maxOpponentStonesCount: 50
   timeFromLastMove: 0
+  maxTimeFromLastMove: 10
+  currentGameType: 1
 --- !u!4 &1158994443
 Transform:
   m_ObjectHideFlags: 0
@@ -1502,7 +1507,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32f8ee1f59a2f9c42aecdec299070da2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OpponentProtocol: 0
+  OpponentProtocol: 1
 --- !u!114 &1158994447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1517,6 +1522,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   linePrefab: {fileID: 1466717351286252944, guid: dcd332c677814a347a96dddd2356c602, type: 3}
   lineParent: {fileID: 475962783}
+--- !u!114 &1158994448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1158994441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d165b08284223b42b0f272fe977dfdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveRecordPath: Assets/Data/moveRecord.xml
+--- !u!114 &1158994449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1158994441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3da8f47a4125b0443806b234a1c38afc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1301506455
 GameObject:
   m_ObjectHideFlags: 0

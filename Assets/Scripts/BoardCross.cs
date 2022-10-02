@@ -125,6 +125,21 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     /// </summary>
     [SerializeField]
     private Transform WhiteStone;
+    /// <summary>
+    /// 黒石が消える時のエフェクト
+    /// </summary>
+    [SerializeField]
+    private ParticleSystem blackParticle;
+    /// <summary>
+    /// 白石が消える時のエフェクト
+    /// </summary>
+    [SerializeField]
+    private ParticleSystem whiteParticle;
+    /// <summary>
+    /// 石の見た目を示すSpriteRenderer
+    /// </summary>
+    [SerializeField]
+    private List<SpriteRenderer> StoneVis;
     #endregion
 
     #region 目の寿命等
@@ -135,7 +150,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     public static float LifeSpan
     {
         set; get;
-    } = 100000f;
+    } = 10f;
     /// <summary>
     /// 石が置かれてからの経過時間（秒）
     /// </summary>
@@ -154,11 +169,21 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
             //BlackStone.localScale = Vector3.one * (1f - stoneAge / LifeSpan);
             //WhiteStone.localScale = Vector3.one * (1f - stoneAge / LifeSpan);
 
+            // 寿命が近づいたら点滅させる
+            if (LifeSpan - 4f < stoneAge && currentBlinkStone == null)
+            {
+                currentBlinkStone = StartCoroutine(BlinkStone());
+                //Debug.Log($"BoardCross.StoneAge: startcoroutine");
+            }
+
             // 寿命を超えた場合は石を取り除く
             if (LifeSpan < stoneAge)
             {
                 stoneAge = 0f;
+                ActivateEffect();
                 BoardStatus = IsOut ? Status.Out : Status.None;
+
+                StopCoroutine(BlinkStone());
             }
         }
         get
@@ -500,9 +525,15 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     private void Update()
     {
         // 石が置かれてからの時間を加算
-        if (BoardStatus == Status.Black || BoardStatus == Status.White)
+        //if (BoardStatus == Status.Black || BoardStatus == Status.White)
+        // プレイヤーの石なら寿命を設ける
+        if (BoardStatus == GameController.Instance.playerColor)
         {
             StoneAge += Time.deltaTime;
+        }
+        else
+        {
+            StoneAge = 0f;
         }
     }
 
@@ -534,6 +565,10 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         {
             Field.Add(this);
         }
+
+        // 見た目情報を取得
+        //StoneVis = new List<SpriteRenderer>(GetComponentsInChildren<SpriteRenderer>(true));
+        SetVisActive();
     }
     /// <summary>
     /// 石を全て取り除く
@@ -542,6 +577,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     {
         foreach (BoardCross board in Field)
         {
+            board.ActivateEffect();
             board.BoardStatus = board.IsOut ? Status.Out : Status.None;
         }
     }
@@ -580,6 +616,12 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
                 line.IsVisible = false;
             }
         }
+
+        // SpriteRendererはオンにする
+        SetVisActive();
+
+        // 点滅フラグを切る
+        currentBlinkStone = null;
     }
     /// <summary>
     /// 調べる場所にある石が相手に囲まれているか調べる
@@ -856,5 +898,96 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// 石が消える時のエフェクトを出す
+    /// </summary>
+    public void ActivateEffect()
+    {
+        // 石が置かれていないなら何もしない
+        if (BoardStatus != Status.Black && BoardStatus != Status.White)
+        {
+            return;
+        }
+
+        // パーティクルを指定する
+        ParticleSystem particle;
+        if (BoardStatus == Status.Black)
+        {
+            particle = blackParticle;
+        }
+        else
+        {
+            particle = whiteParticle;
+        }
+
+        // パーティクルを有効化する
+        particle.Play();
+    }
+
+    /// <summary>
+    /// 石の見た目を見せるかどうか
+    /// </summary>
+    /// <param name="isActive"></param>
+    public void SetVisActive(bool isActive=true)
+    {
+        foreach (SpriteRenderer sprite in StoneVis)
+        {
+            sprite.enabled = isActive;
+        }
+    }
+
+    /// <summary>
+    /// 現在回っているコルーチン
+    /// </summary>
+    private Coroutine currentBlinkStone;
+    /// <summary>
+    /// 石を点滅させる
+    /// 全部で4sec
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator BlinkStone()
+    {
+        // 最初の2秒：1Hz
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.5f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.5f);
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.5f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.5f);
+
+        // 次の1秒：2Hz
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.25f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.25f);
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.25f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.25f);
+
+        // 最後の1秒：4Hz
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.125f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.125f);
+
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.125f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.125f);
+
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.125f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.125f);
+
+        SetVisActive(true);
+        yield return new WaitForSeconds(0.125f);
+        SetVisActive(false);
+        yield return new WaitForSeconds(0.125f);
     }
 }

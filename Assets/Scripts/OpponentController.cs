@@ -12,7 +12,8 @@ public class OpponentController : Singleton<OpponentController>
     /// </summary>
     public enum Protocol
     {
-        Random, // ランダム
+        Random,     // ランダム
+        RandomPlus, // ランダムに毛が生えたやつ
     }
     /// <summary>
     /// 相手（COM）の考え方
@@ -26,6 +27,10 @@ public class OpponentController : Singleton<OpponentController>
     {
         set; get;
     } = 4f;
+    /// <summary>
+    /// SpanAverageの初期値
+    /// </summary>
+    private float firstSpanAverage;
     /// <summary>
     /// 打ってから次の手を打つまでの時間の分散
     /// </summary>
@@ -65,6 +70,13 @@ public class OpponentController : Singleton<OpponentController>
         }
     }
 
+    protected override void Awake()
+    {
+        base.Awake();
+
+        // 初期化
+        firstSpanAverage = SpanAverage;
+    }
     private void Update()
     {
         TimeFromLastMove += Time.deltaTime;
@@ -86,6 +98,7 @@ public class OpponentController : Singleton<OpponentController>
             case Protocol.Random:
             default:
                 return MoveRandom(field);
+            
         }
     }
     /// <summary>
@@ -100,5 +113,48 @@ public class OpponentController : Singleton<OpponentController>
         BoardCross candidate = BoardCross.EmptyField[rand];
 
         return candidate;
+    }
+    /// <summary>
+    /// ランダムに毛が生えたやつ
+    /// 勝手に死なないようにする
+    /// </summary>
+    /// <param name="field"></param>
+    /// <returns></returns>
+    private BoardCross MoveRandomPlus(List<BoardCross> field)
+    {
+        // 無限ループ対策
+        int count = 0;
+
+        BoardCross result = MoveRandom(field);
+
+        // 石の場所が決定されるまで実行
+        while (true)
+        {
+            result = MoveRandom(field);
+
+            foreach (BoardCross neighborhood in result.Neighborhood4)
+            {
+                // 自分自身の色でない石がある場合はOK
+                if (neighborhood.BoardStatus != GameController.Instance.opponentColor || neighborhood.BoardStatus != BoardCross.Status.Out)
+                {
+                    return result;
+                }
+            }
+
+            // 無限ループ対策
+            count++;
+            if (count > 200)
+            {
+                Debug.LogError($"OpponentController.MoveRandomPlus: Too many iteration!");
+            }
+            return result;
+        }
+    }
+    /// <summary>
+    /// SpanAverageをリセットする
+    /// </summary>
+    public void ResetSpanAverage()
+    {
+        SpanAverage = firstSpanAverage;
     }
 }
