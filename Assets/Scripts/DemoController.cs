@@ -81,6 +81,8 @@ public class DemoController : Singleton<DemoController>
 
         // 初期値にセットする
         nextMove = MoveRecord.Dequeue();
+
+        TimeFromLastMove = 0f;
     }
 
     /// <summary>

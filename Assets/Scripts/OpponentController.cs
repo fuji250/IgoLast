@@ -156,5 +156,6 @@ public class OpponentController : Singleton<OpponentController>
     public void ResetSpanAverage()
     {
         SpanAverage = firstSpanAverage;
+        TimeFromLastMove = 0f;
     }
 }

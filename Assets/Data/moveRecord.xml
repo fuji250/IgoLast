@@ -6,7 +6,7 @@
 			<color>None</color>
 			<x>5</x>
 			<z>5</z>
-			<time>1</time> <!--あとで9.8にする-->
+			<time>3</time> <!--あとで9.8にする-->
 		</nextMove>
 		<nextMove id="1">
 			<color>Black</color>

@@ -187,7 +187,7 @@ public class GameController : Singleton<GameController>
                     board.BoardStatus = opponentColor;
 
                     // 石を打つ音
-                    AudioController.Instance.PlayPutStone();
+                    //AudioController.Instance.PlayPutStone(); // 20221003 音がうるさいのでコメントアウト
 
                     // 隣の石を取り除く
                     List<BoardCross> Prisoners = board.RemoveStoneAll(opponentColor);
