@@ -239,7 +239,7 @@ public class GameController : Singleton<GameController>
             }
 
             // 最後に打った手から一定時間経った場合は、リセットしてデモ状態に移行する
-            if (maxTimeFromLastMove < timeFromLastMove)
+            if (maxTimeFromLastMove < timeFromLastMove && BoardCross.Field.Count == 121 && playVideo)
             {
                 BoardCross.ClearStoneAll();
                 OpponentController.Instance.ResetSpanAverage();
