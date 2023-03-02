@@ -17,6 +17,16 @@ public class GameController : Singleton<GameController>
     [SerializeField, Range(2, 9)] private int HorizontalNum = 9;
 
     /// <summary>
+    /// Lineを制御するため
+    /// </summary>
+    [SerializeField] LineController m_LineController;
+
+    /// <summary>
+    /// デモ映像を流すか(trueで、かつマス目が9×9なら流す）
+    /// </summary>
+    [SerializeField] private bool playVideo = false;
+
+    /// <summary>
     /// 盤面上の1つの目のプレハブ
     /// </summary>
     public GameObject BoardCrossPrefab;
@@ -94,7 +104,7 @@ public class GameController : Singleton<GameController>
     /// <summary>
     /// 現在のゲームの種類
     /// </summary>
-    public GameType currentGameType;
+    public GameType currentGameType = GameType.PlayWithComputer;
 
     protected override void Awake()
     {
@@ -114,6 +124,8 @@ public class GameController : Singleton<GameController>
                 board.Initialize(i, j);
             }
         }
+        //盤面の線を指定されたマス目に合わせる
+        m_LineController.AdjustLines(HorizontalNum, VerticalNum);
 
         // 線生成
         ConnectingLineFactory.Instance.GenerateConnectingLineInstance();
@@ -236,8 +248,8 @@ public class GameController : Singleton<GameController>
             }
         }
 
-        // デモ映像
-        else if (currentGameType == GameType.Demo)
+        // デモ映像（マス目が9×9のときのみできるようにする）
+        else if (currentGameType == GameType.Demo && BoardCross.Field.Count == 121 && playVideo)
         {
             // 棋譜がこれ以上ない場合はリセットして棋譜を再初期化する
             if (DemoController.Instance.MoveRecord.Count <= 0)

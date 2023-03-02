@@ -53,7 +53,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     {
         get
         {
-            return X < 1 || BOARD_SIZE_V - 2 < X || Z < 1 || BOARD_SIZE_H - 2 < Z;
+            return X < 1 || BOARD_SIZE_H - 2 < X || Z < 1 || BOARD_SIZE_V - 2 < Z;
         }
     }
     /// <summary>

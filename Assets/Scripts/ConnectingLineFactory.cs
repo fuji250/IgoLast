@@ -33,7 +33,6 @@ public class ConnectingLineFactory : Singleton<ConnectingLineFactory>
             {
                 continue;
             }
-
             foreach (BoardCross neighborhood in board.Neighborhood8)
             {
                 // 外側なら何もしない
