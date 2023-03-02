@@ -13,7 +13,8 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     /// <summary>
     /// 盤の1辺の長さ9+端の分2
     /// </summary>
-    public readonly static int BOARD_SIZE = 11;
+    public static int BOARD_SIZE_V = 11;
+    public static int BOARD_SIZE_H = 11;
     /// <summary>
     /// x座標 1～9
     /// </summary>
@@ -52,7 +53,7 @@ public class BoardCross: MonoBehaviour, IComparable<BoardCross>
     {
         get
         {
-            return X < 1 || BOARD_SIZE - 2 < X || Z < 1 || BOARD_SIZE - 2 < Z;
+            return X < 1 || BOARD_SIZE_V - 2 < X || Z < 1 || BOARD_SIZE_H - 2 < Z;
         }
     }
     /// <summary>

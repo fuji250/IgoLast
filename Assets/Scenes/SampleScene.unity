@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311912, g: 0.3807398, b: 0.3587272, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1362,6 +1362,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3db2895060f466e4a80956ef31810999, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  VerticalNum: 3
+  HorizontalNum: 4
   BoardCrossPrefab: {fileID: 1018254985750735390, guid: f1c8519a65c754e47ad2b4ac47ec56a6, type: 3}
   BoardCrossParent: {fileID: 847675855}
   playerColor: 2

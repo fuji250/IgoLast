@@ -8,6 +8,15 @@ using UnityEngine;
 public class GameController : Singleton<GameController>
 {
     /// <summary>
+    /// 縦方向のマス数   
+    /// </summary>
+    [SerializeField, Range(2, 9)] private int VerticalNum = 9;
+    /// <summary>
+    /// 横方向のマス目
+    /// </summary>
+    [SerializeField, Range(2, 9)] private int HorizontalNum = 9;
+
+    /// <summary>
     /// 盤面上の1つの目のプレハブ
     /// </summary>
     public GameObject BoardCrossPrefab;
@@ -91,10 +100,14 @@ public class GameController : Singleton<GameController>
     {
         base.Awake();
 
+        // 指定されたマス目に調整する
+        BoardCross.BOARD_SIZE_V = VerticalNum + 2;
+        BoardCross.BOARD_SIZE_H = HorizontalNum + 2;
+
         // 盤面生成
-        for (int i=0; i<BoardCross.BOARD_SIZE; i++)
+        for (int i=0; i<BoardCross.BOARD_SIZE_H; i++)
         {
-            for (int j=0; j<BoardCross.BOARD_SIZE; j++)
+            for (int j=0; j<BoardCross.BOARD_SIZE_V; j++)
             {
                 GameObject go = Instantiate(BoardCrossPrefab, BoardCrossParent);
                 BoardCross board = go.GetComponent<BoardCross>() ?? go.AddComponent<BoardCross>();
