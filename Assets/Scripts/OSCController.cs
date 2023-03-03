@@ -82,7 +82,7 @@ public class OSCController : MonoBehaviour
             //nstantiate(ps, sensorPosition, Quaternion.identity);
 
             //PosCheck(sensorPosition, X, Z);
-            gameController.CheckPosition(X, Z);
+            //gameController.CheckPosition(X, Z);
         }
         //var msg = message.address + ": ";
 
