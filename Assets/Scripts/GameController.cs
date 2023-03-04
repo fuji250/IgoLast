@@ -8,13 +8,13 @@ using UnityEngine;
 public class GameController : Singleton<GameController>
 {
     /// <summary>
-    /// 縦方向のマス数   
+    /// 縦方向のマス数
     /// </summary>
-    [SerializeField, Range(2, 9)] private int VerticalNum = 9;
+    [SerializeField, Range(2, 16)] private int VerticalNum = 9;
     /// <summary>
-    /// 横方向のマス目
+    /// 横方向のマス数
     /// </summary>
-    [SerializeField, Range(2, 9)] private int HorizontalNum = 9;
+    [SerializeField, Range(2, 16)] private int HorizontalNum = 9;
 
     /// <summary>
     /// Lineを制御するため

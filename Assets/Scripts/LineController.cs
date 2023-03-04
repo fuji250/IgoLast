@@ -22,7 +22,7 @@ public class LineController : MonoBehaviour
     /// <summary>
     /// Å‘åƒ}ƒX”
     /// </summary>
-    private int m_MaxBlockNum = 9;
+    private int m_MaxBlockNum = 16;
 
     /// <summary>
     /// Line‚ğ”ñŠˆ«‰»‚³‚¹‚½‚è’Z‚­‚µ‚½‚è‚·‚é
